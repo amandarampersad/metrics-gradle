@@ -59,6 +59,18 @@ public class MetricControllerTestCase {
         JSONObject jsonObject = new JSONObject(result);
 
         Assert.assertTrue(jsonObject.has("error"));
+
+        name = "";
+        result = sut.create(name);
+        jsonObject = new JSONObject(result);
+
+        Assert.assertTrue(jsonObject.has("error"));
+
+        name = null;
+        result = sut.create(name);
+        jsonObject = new JSONObject(result);
+
+        Assert.assertTrue(jsonObject.has("error"));
     }
 
     @Test
@@ -74,8 +86,39 @@ public class MetricControllerTestCase {
 
     @Test
     public void testAddSingleValue() {
+        String name = null;
+        Double value = null;
+
+        // Try with invalid metric name
+        String result = sut.addValueToMetric(name, value);
+        JSONObject jsonObject = new JSONObject(result);
+        Assert.assertTrue(jsonObject.has("error"));
+        Assert.assertEquals(jsonObject.get("error"),  "Metric name is invalid");
+
+        // Try with nonexistent metric name
+        name = "Metric";
+        result = sut.addValueToMetric(name, value);
+        jsonObject = new JSONObject(result);
+        Assert.assertTrue(jsonObject.has("error"));
+        Assert.assertEquals(jsonObject.get("error"), "Metric with name " + name + " does not exist");
+
+        // Try with invalid value
+        sut.create(name);
+        result = sut.addValueToMetric(name, value);
+        jsonObject = new JSONObject(result);
+        Assert.assertEquals(jsonObject.get("error"), "Can't insert null value into metric");
+
+        // Try with all valid parameters
+        value = 1.5;
+        result = sut.addValueToMetric(name, value);
+        jsonObject = new JSONObject(result);
+        Assert.assertTrue(jsonObject.has("success"));
+    }
+
+    @Test
+    public void testAddNullValue() {
         String name = "Metric";
-        Double value = 1.5;
+        Double value = null;
 
         String result = sut.addValueToMetric(name, value);
         JSONObject jsonObject = new JSONObject(result);
@@ -85,7 +128,8 @@ public class MetricControllerTestCase {
         sut.create(name);
         result = sut.addValueToMetric(name, value);
         jsonObject = new JSONObject(result);
-        Assert.assertTrue(jsonObject.has("success"));
+        Assert.assertTrue(jsonObject.has("error"));
+        Assert.assertEquals(jsonObject.get("error"), "Can't insert null value into metric");
     }
 
     @Test
@@ -242,5 +286,4 @@ public class MetricControllerTestCase {
         Assert.assertTrue(jsonObject.has("success"));
         Assert.assertEquals(jsonObject.getDouble("success"), val3, .001);
     }
-
 }

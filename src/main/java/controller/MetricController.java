@@ -24,7 +24,7 @@ public class MetricController {
         Space complexity: O(n)
      */
     @RequestMapping(value = "/create", method = RequestMethod.POST)
-    public String create(@RequestParam(name = "name") String name) {
+    public String create(@RequestParam(name = "name", required = true) String name) {
         JSONObject toReturn = new JSONObject();
 
         try {
@@ -45,8 +45,8 @@ public class MetricController {
         Space complexity: O(n)
      */
     @RequestMapping(value = "/addvalue", method = RequestMethod.POST)
-    public String addValueToMetric(@RequestParam(name = "name") String name,
-                                   @RequestParam(name = "value") Double value) {
+    public String addValueToMetric(@RequestParam(name = "name", required = true) String name,
+                                   @RequestParam(name = "value", required = true) Double value) {
         JSONObject toReturn = new JSONObject();
 
         try {
@@ -183,23 +183,32 @@ public class MetricController {
     }
 
     private void validateName(String name) throws Exception {
-        if (metrics.containsKey(name)) {
-            throw new Exception("Metric with " + name + "already exists");
+        if (name == null || name.length() > 50 || name.length() == 0) {
+            throw new Exception("Metric name is invalid");
         }
 
-        if (name.length() > 50) {
-            throw new Exception("Metric " + name + " is invalid");
+        if (metrics.containsKey(name)) {
+            throw new Exception("Metric with " + name + "already exists");
         }
     }
 
     private void checkIfMetricExists(String name) throws Exception {
+        if (name == null || name.length() == 0) {
+            throw new Exception("Metric name is invalid");
+        }
+
         if (!metrics.containsKey(name)) {
             throw new Exception("Metric with name " + name + " does not exist");
         }
     }
 
     private ArrayList insertValueInOrder(ArrayList values,
-                                         Double value) {
+                                         Double value) throws Exception {
+
+        if (value == null) {
+            throw new Exception("Can't insert null value into metric");
+        }
+
         values.add(value);
         Collections.sort(values);
 
