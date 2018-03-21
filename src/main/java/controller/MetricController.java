@@ -18,21 +18,17 @@ public class MetricController {
     @Autowired
     private HashMap<String, List> metrics;
 
+    /*
+        Typical runtime: O(1)
+        Worst case runtime: O(n)
+        Space complexity: O(n)
+     */
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     public String create(@RequestParam(name = "name") String name) {
         JSONObject toReturn = new JSONObject();
 
-        if (metrics.containsKey(name)) {
-            toReturn.put("error", "Metric with name " + name + " already exists");
-            return toReturn.toString();
-        }
-
-        if (!nameIsValid(name)) {
-            toReturn.put("error", "Metric " + name + " is invalid");
-            return toReturn.toString();
-        }
-
         try {
+            validateName(name);
             ArrayList<Double> values = new ArrayList<>();
             metrics.put(name, values);
             toReturn.put("success", "Metric " + name + " created");
@@ -43,17 +39,18 @@ public class MetricController {
         return toReturn.toString();
     }
 
+    /*
+        Typical runtime: O(n * log(n)) because the metric is sorted
+        with every insertion of a new value
+        Space complexity: O(n)
+     */
     @RequestMapping(value = "/addvalue", method = RequestMethod.POST)
     public String addValueToMetric(@RequestParam(name = "name") String name,
                                    @RequestParam(name = "value") Double value) {
         JSONObject toReturn = new JSONObject();
 
-        if (!metrics.containsKey(name)) {
-            toReturn.put("error", "Metric with name " + name + " does not exist");
-            return toReturn.toString();
-        }
-
         try {
+            checkIfMetricExists(name);
             ArrayList<Double> values = (ArrayList<Double>) metrics.get(name);
             values = insertValueInOrder(values, value);
             metrics.put(name, values);
@@ -66,16 +63,16 @@ public class MetricController {
         return toReturn.toString();
     }
 
+    /*
+        Runtime: O(n)
+        Space complexity: O(n)
+     */
     @RequestMapping(value = "/getmean/{name}", method = RequestMethod.GET)
     public String getMean(@PathVariable String name) {
         JSONObject toReturn = new JSONObject();
 
-        if (!metrics.containsKey(name)) {
-            toReturn.put("error", "Metric with name " + name + " does not exist");
-            return toReturn.toString();
-        }
-
         try {
+            checkIfMetricExists(name);
             ArrayList<Double> values = (ArrayList<Double>) metrics.get(name);
             Double sum = 0.0;
 
@@ -97,16 +94,17 @@ public class MetricController {
         return toReturn.toString();
     }
 
+    /*
+        Runtime: O(1)
+        Worst case runtime: O(n)
+        Space complexity: O(n)
+     */
     @RequestMapping(value = "/getmedian/{name}", method = RequestMethod.GET)
     public String getMedian(@PathVariable String name) {
         JSONObject toReturn = new JSONObject();
 
-        if (!metrics.containsKey(name)) {
-            toReturn.put("error", "Metric with name " + name + " does not exist");
-            return toReturn.toString();
-        }
-
         try {
+            checkIfMetricExists(name);
             ArrayList<Double> values = (ArrayList<Double>) metrics.get(name);
             Double median;
             int size = values.size();
@@ -131,16 +129,17 @@ public class MetricController {
         return toReturn.toString();
     }
 
+    /*
+        Runtime: O(1)
+        Worst case runtime: O(n)
+        Space complexity: O(n)
+     */
     @RequestMapping(value = "/getmin/{name}", method = RequestMethod.GET)
     public String getMin(@PathVariable String name) {
         JSONObject toReturn = new JSONObject();
 
-        if (!metrics.containsKey(name)) {
-            toReturn.put("error", "Metric with name " + name + " does not exist");
-            return toReturn.toString();
-        }
-
         try {
+            checkIfMetricExists(name);
             ArrayList<Double> values = (ArrayList<Double>) metrics.get(name);
 
             if (values.isEmpty()) {
@@ -156,16 +155,17 @@ public class MetricController {
         return toReturn.toString();
     }
 
+    /*
+        Runtime: O(1)
+        Worst case runtime: O(n)
+        Space complexity: O(n)
+     */
     @RequestMapping(value = "/getmax/{name}", method = RequestMethod.GET)
     public String getMax(@PathVariable String name) {
         JSONObject toReturn = new JSONObject();
 
-        if (!metrics.containsKey(name)) {
-            toReturn.put("error", "Metric with name " + name + " does not exist");
-            return toReturn.toString();
-        }
-
         try {
+            checkIfMetricExists(name);
             ArrayList<Double> values = (ArrayList<Double>) metrics.get(name);
             int size = values.size();
 
@@ -182,12 +182,24 @@ public class MetricController {
         return toReturn.toString();
     }
 
-    private boolean nameIsValid(String name) {
-        return name.length() < 50;
+    private void validateName(String name) throws Exception {
+        if (metrics.containsKey(name)) {
+            throw new Exception("Metric with " + name + "already exists");
+        }
+
+        if (name.length() > 50) {
+            throw new Exception("Metric " + name + " is invalid");
+        }
+    }
+
+    private void checkIfMetricExists(String name) throws Exception {
+        if (!metrics.containsKey(name)) {
+            throw new Exception("Metric with name " + name + " does not exist");
+        }
     }
 
     private ArrayList insertValueInOrder(ArrayList values,
-                                    Double value) {
+                                         Double value) {
         values.add(value);
         Collections.sort(values);
 

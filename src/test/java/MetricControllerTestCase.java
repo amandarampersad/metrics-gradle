@@ -54,7 +54,7 @@ public class MetricControllerTestCase {
 
     @Test
     public void testCreateWithInvalidName() {
-        String name = "ThisNameIsFiftyCharactersLong111111111111111111111";
+        String name = "ThisNameIsMoreThanFiftyCharactersLong1111111111111111111111";
         String result = sut.create(name);
         JSONObject jsonObject = new JSONObject(result);
 
